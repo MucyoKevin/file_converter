@@ -1,0 +1,215 @@
+{% extends 'converter/base.html' %}
+
+{% block title %}Home - File Converter{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        text-align: center;
+        padding: 3rem 0;
+    }
+    
+    .hero h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero p {
+        font-size: 1.25rem;
+        color: white;
+        margin-bottom: 3rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .converter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-top: 3rem;
+    }
+    
+    .converter-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        box-shadow: 0 10px 15px -3px var(--shadow);
+    }
+    
+    .converter-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 25px -5px var(--shadow-lg);
+    }
+    
+    .converter-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+    }
+    
+    .converter-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: var(--dark);
+    }
+    
+    .converter-card p {
+        color: var(--gray);
+        margin-bottom: 1.5rem;
+    }
+    
+    .format-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .format-tag {
+        background: var(--light);
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--primary);
+    }
+    
+    .features {
+        margin-top: 4rem;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .feature-item {
+        text-align: center;
+        color: white;
+    }
+    
+    .feature-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+    }
+    
+    .feature-item h4 {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-item p {
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Convert Files with Ease</h1>
+    <p>Transform your files between multiple formats instantly. Fast, secure, and free.</p>
+</div>
+
+<div class="converter-grid">
+    <a href="{% url 'converter:convert_file' 'image' %}" class="converter-card">
+        <div class="converter-icon">
+            <i class="fas fa-image"></i>
+        </div>
+        <h3>Image Converter</h3>
+        <p>Convert images between different formats</p>
+        <div class="format-tags">
+            <span class="format-tag">JPG</span>
+            <span class="format-tag">PNG</span>
+            <span class="format-tag">GIF</span>
+            <span class="format-tag">WebP</span>
+            <span class="format-tag">PDF</span>
+        </div>
+    </a>
+    
+    <a href="{% url 'converter:convert_file' 'document' %}" class="converter-card">
+        <div class="converter-icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <h3>Document Converter</h3>
+        <p>Convert documents seamlessly</p>
+        <div class="format-tags">
+            <span class="format-tag">PDF</span>
+            <span class="format-tag">DOCX</span>
+            <span class="format-tag">TXT</span>
+        </div>
+    </a>
+    
+    <a href="{% url 'converter:convert_file' 'video' %}" class="converter-card">
+        <div class="converter-icon">
+            <i class="fas fa-video"></i>
+        </div>
+        <h3>Video Converter</h3>
+        <p>Convert videos and create GIFs</p>
+        <div class="format-tags">
+            <span class="format-tag">MP4</span>
+            <span class="format-tag">AVI</span>
+            <span class="format-tag">GIF</span>
+        </div>
+    </a>
+</div>
+
+<div class="features">
+    <div class="features-grid">
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h4>Lightning Fast</h4>
+            <p>Powered by async processing for quick conversions</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h4>Secure & Private</h4>
+            <p>Your files are processed securely and deleted after conversion</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h4>Real-time Updates</h4>
+            <p>Track conversion progress in real-time with WebSockets</p>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-gift"></i>
+            </div>
+            <h4>100% Free</h4>
+            <p>No limits, no registration required</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
