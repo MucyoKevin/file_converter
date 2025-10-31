@@ -1,13 +1,4 @@
 services:
-  # Redis Instance (for Celery and Channels)
-  - type: pserv
-    name: file-converter-redis
-    env: docker
-    image:
-      url: docker.io/redis:7-alpine
-    plan: free
-    region: oregon
-
   # Web Service (Daphne + Django)
   - type: web
     name: file-converter-web
@@ -23,10 +14,10 @@ services:
         generateValue: true
       - key: DEBUG
         value: False
+      # Redis Configuration (you'll need to add this manually)
       - key: REDIS_URL
-        fromService:
+        fromDatabase:
           name: file-converter-redis
-          type: pserv
           property: connectionString
       # Supabase Configuration (add these manually in Render dashboard)
       - key: SUPABASE_URL
@@ -56,10 +47,10 @@ services:
           envVarKey: SECRET_KEY
       - key: DEBUG
         value: False
+      # Redis Configuration
       - key: REDIS_URL
-        fromService:
+        fromDatabase:
           name: file-converter-redis
-          type: pserv
           property: connectionString
       # Supabase Configuration (same as web service)
       - key: SUPABASE_URL
@@ -70,5 +61,10 @@ services:
         sync: false
       - key: SUPABASE_BUCKET_NAME
         value: file-converter
+
+databases:
+  - name: file-converter-redis
+    plan: free
+    region: oregon
 
 
