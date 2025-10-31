@@ -1,0 +1,74 @@
+services:
+  # Redis Instance (for Celery and Channels)
+  - type: pserv
+    name: file-converter-redis
+    env: docker
+    image:
+      url: docker.io/redis:7-alpine
+    plan: free
+    region: oregon
+
+  # Web Service (Daphne + Django)
+  - type: web
+    name: file-converter-web
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "daphne -b 0.0.0.0 -p $PORT fileconverter.asgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: REDIS_URL
+        fromService:
+          name: file-converter-redis
+          type: pserv
+          property: connectionString
+      # Supabase Configuration (add these manually in Render dashboard)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: SUPABASE_BUCKET_NAME
+        value: file-converter
+
+  # Celery Worker
+  - type: worker
+    name: file-converter-worker
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "celery -A fileconverter worker --loglevel=info --pool=solo"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        fromService:
+          name: file-converter-web
+          type: web
+          envVarKey: SECRET_KEY
+      - key: DEBUG
+        value: False
+      - key: REDIS_URL
+        fromService:
+          name: file-converter-redis
+          type: pserv
+          property: connectionString
+      # Supabase Configuration (same as web service)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_DATABASE_URL
+        sync: false
+      - key: SUPABASE_BUCKET_NAME
+        value: file-converter
+
+

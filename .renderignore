@@ -1,0 +1,26 @@
+# Files to ignore during Render deployment
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.env
+.env.local
+*.log
+.git/
+.gitignore
+.vscode/
+.idea/
+*.sqlite3
+db.sqlite3
+media/uploads/
+media/converted/
+node_modules/
+
+

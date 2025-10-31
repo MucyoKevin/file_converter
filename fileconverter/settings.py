@@ -13,12 +13,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-change-this-in-production'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-your-secret-key-change-this-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -71,16 +71,33 @@ ASGI_APPLICATION = 'fileconverter.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'converter_db',
-        'USER': 'postgres',
-        'PASSWORD': '12345678', 
-        'HOST': 'localhost',
-        'PORT': '5432',
+# Check if DATABASE_URL is provided (for production/Render)
+# Supabase provides a PostgreSQL connection string
+DATABASE_URL = os.environ.get('DATABASE_URL') or os.environ.get('SUPABASE_DATABASE_URL')
+
+if DATABASE_URL:
+    # Parse DATABASE_URL for production (works with both Render and Supabase)
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+    print(f"✓ Using PostgreSQL database from environment")
+else:
+    # Use local PostgreSQL for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'converter_db'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''), 
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -131,8 +148,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -141,11 +159,22 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
 
 # Channels Configuration
+# Parse Redis URL for channels
+import re
+redis_url = os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')
+redis_match = re.match(r'redis://([^:]+):(\d+)', redis_url)
+if redis_match:
+    REDIS_HOST = redis_match.group(1)
+    REDIS_PORT = int(redis_match.group(2))
+else:
+    REDIS_HOST = '127.0.0.1'
+    REDIS_PORT = 6379
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
         },
     },
 }
@@ -160,12 +189,14 @@ SUPPORTED_IMAGE_FORMATS = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff']
 SUPPORTED_DOCUMENT_FORMATS = ['pdf', 'docx', 'txt']
 SUPPORTED_VIDEO_FORMATS = ['mp4', 'avi', 'mov', 'mkv', 'flv', 'wmv']
 
-# AWS S3 Settings (optional - uncomment to use)
-# AWS_ACCESS_KEY_ID = 'your-access-key'
-# AWS_SECRET_ACCESS_KEY = 'your-secret-key'
-# AWS_STORAGE_BUCKET_NAME = 'your-bucket-name'
-# AWS_S3_REGION_NAME = 'us-east-1'
-# AWS_S3_FILE_OVERWRITE = False
-# AWS_DEFAULT_ACL = None
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# Supabase Configuration
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+SUPABASE_BUCKET_NAME = os.environ.get('SUPABASE_BUCKET_NAME', 'file-converter')
+
+# Use Supabase Storage if credentials are provided (for production)
+if SUPABASE_URL and SUPABASE_KEY:
+    DEFAULT_FILE_STORAGE = 'fileconverter.storage_backends.SupabaseStorage'
+    # Media URL will be handled by the storage backend
+    print(f"✓ Using Supabase Storage: {SUPABASE_BUCKET_NAME}")
 

@@ -173,26 +173,39 @@ def download_file(request, conversion_id):
 def conversion_history(request):
     """Get conversion history"""
     try:
-        limit = int(request.GET.get('limit', 10))
+        # Check if it's an API request (JSON)
+        if request.headers.get('Accept') == 'application/json' or request.GET.get('format') == 'json':
+            limit = int(request.GET.get('limit', 10))
+            conversions = FileConversion.objects.all()[:limit]
+            
+            data = {
+                'conversions': [
+                    {
+                        'id': str(c.id),
+                        'original_filename': c.original_filename,
+                        'original_format': c.original_format,
+                        'target_format': c.target_format,
+                        'status': c.status,
+                        'conversion_type': c.conversion_type,
+                        'created_at': c.created_at.isoformat(),
+                        'file_size_mb': c.get_file_size_mb(),
+                    }
+                    for c in conversions
+                ]
+            }
+            
+            return JsonResponse(data)
+        
+        # Render HTML page
+        limit = int(request.GET.get('limit', 50))
         conversions = FileConversion.objects.all()[:limit]
         
-        data = {
-            'conversions': [
-                {
-                    'id': str(c.id),
-                    'original_filename': c.original_filename,
-                    'original_format': c.original_format,
-                    'target_format': c.target_format,
-                    'status': c.status,
-                    'conversion_type': c.conversion_type,
-                    'created_at': c.created_at.isoformat(),
-                    'file_size_mb': c.get_file_size_mb(),
-                }
-                for c in conversions
-            ]
+        context = {
+            'conversions': conversions,
+            'total_count': FileConversion.objects.count(),
         }
         
-        return JsonResponse(data)
+        return render(request, 'converter/history.html', context)
         
     except Exception as e:
         return JsonResponse({
